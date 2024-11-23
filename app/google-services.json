@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "266796540380",
+    "project_id": "splitpro-eb8e2",
+    "storage_bucket": "splitpro-eb8e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266796540380:android:bea763efab5113ab3d6f19",
+        "android_client_info": {
+          "package_name": "com.example.splitpro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "266796540380-513i8r0n6g00sjs8ef6g62hab70v6jor.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.splitpro",
+            "certificate_hash": "842a9335d2d7070e39a625658a8d0f72fee1b85d"
+          }
+        },
+        {
+          "client_id": "266796540380-20279ccpssi6bp5muiks3ao91kaeqigk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAnEUnk5lWZ9t3LcCF2o-dYt8N3w5GXTpM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "266796540380-20279ccpssi6bp5muiks3ao91kaeqigk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

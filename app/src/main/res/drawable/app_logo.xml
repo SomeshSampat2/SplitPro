@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Background Circle with Gradient -->
+    <path android:pathData="M60,60m-60,0a60,60 0,1 1,120 0a60,60 0,1 1,-120 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="120"
+                android:endY="120">
+                <item android:offset="0" android:color="#FF1E90FF"/>
+                <item android:offset="1" android:color="#FF0072E5"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    
+    <!-- Decorative Elements -->
+    <path
+        android:fillColor="#60AFFF"
+        android:fillAlpha="0.3"
+        android:pathData="M85,35m-25,0a25,25 0,1 1,50 0a25,25 0,1 1,-50 0" />
+        
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.2"
+        android:pathData="M30,85m-15,0a15,15 0,1 1,30 0a15,15 0,1 1,-30 0" />
+    
+    <!-- Split Symbol (S) with Shadow -->
+    <path
+        android:fillColor="#004DB3"
+        android:fillAlpha="0.1"
+        android:pathData="M67,37C67,37 77,37 77,47C77,57 57,57 57,67C57,77 67,77 67,77L77,77L77,87L67,87C67,87 47,87 47,72C47,57 67,57 67,47C67,37 57,37 57,37L47,37L47,27L67,27"
+        android:translateX="2"
+        android:translateY="2"/>
+    
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M65,35C65,35 75,35 75,45C75,55 55,55 55,65C55,75 65,75 65,75L75,75L75,85L65,85C65,85 45,85 45,70C45,55 65,55 65,45C65,35 55,35 55,35L45,35L45,25L65,25"/>
+    
+    <!-- Dollar Sign with Shadow -->
+    <path
+        android:fillColor="#004DB3"
+        android:fillAlpha="0.1"
+        android:pathData="M59,32L65,32L65,92L59,92z"
+        android:translateX="2"
+        android:translateY="2"/>
+    
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M57,30L63,30L63,90L57,90z"/>
+</vector>
