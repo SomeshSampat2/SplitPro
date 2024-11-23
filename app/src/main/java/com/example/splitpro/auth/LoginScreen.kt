@@ -29,6 +29,7 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
 import com.example.splitpro.common.components.*
+import com.example.splitpro.ui.theme.Background
 import com.example.splitpro.ui.theme.Primary
 import com.example.splitpro.ui.theme.PrimaryLight
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -87,8 +88,8 @@ fun LoginScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.surface,
-                        MaterialTheme.colorScheme.surface,
+                        Background,
+                        Background,
                         PrimaryLight.copy(alpha = 0.1f)
                     )
                 )
