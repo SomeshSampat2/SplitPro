@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -28,14 +27,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
-import com.example.splitpro.common.components.*
-import com.example.splitpro.ui.theme.Background
+import com.example.splitpro.auth.AuthState
+import com.example.splitpro.auth.AuthViewModel
+import com.example.splitpro.common.components.GoogleSignInButton
 import com.example.splitpro.ui.theme.Primary
 import com.example.splitpro.ui.theme.PrimaryLight
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginScreen(
@@ -44,7 +42,7 @@ fun LoginScreen(
     viewModel: AuthViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    val state by viewModel.state.collectAsState()
+    val authState by viewModel.state.collectAsState()
     val context = LocalContext.current
 
     // Configure Google Sign In
@@ -68,15 +66,12 @@ fun LoginScreen(
         }
     }
 
-    LaunchedEffect(state) {
-        when (state) {
+    LaunchedEffect(authState) {
+        when (authState) {
             is AuthState.SignedIn -> {
-                if ((state as AuthState.SignedIn).shouldNavigateToProfile) {
+                if ((authState as AuthState.SignedIn).shouldNavigateToProfile) {
                     onNavigateToProfile()
                 }
-            }
-            is AuthState.Success -> {
-                // Handle navigation to main screen if needed
             }
             else -> {}
         }
@@ -88,8 +83,8 @@ fun LoginScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Background,
-                        Background,
+                        MaterialTheme.colorScheme.surface,
+                        MaterialTheme.colorScheme.surface,
                         PrimaryLight.copy(alpha = 0.1f)
                     )
                 )
@@ -177,7 +172,7 @@ fun LoginScreen(
                         spotColor = Primary.copy(alpha = 0.25f)
                     )
                     .zIndex(1f),
-                enabled = state !is AuthState.Loading
+                enabled = authState !is AuthState.Loading
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -185,16 +180,16 @@ fun LoginScreen(
 
         // Error Message
         AnimatedVisibility(
-            visible = state is AuthState.Error,
+            visible = authState is AuthState.Error,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 32.dp)
         ) {
-            if (state is AuthState.Error) {
+            if (authState is AuthState.Error) {
                 Text(
-                    text = (state as AuthState.Error).message,
+                    text = (authState as AuthState.Error).message,
                     modifier = Modifier
                         .background(
                             color = MaterialTheme.colorScheme.errorContainer,
@@ -207,7 +202,7 @@ fun LoginScreen(
         }
 
         // Loading Indicator
-        if (state is AuthState.Loading) {
+        if (authState is AuthState.Loading) {
             CircularProgressIndicator(
                 modifier = Modifier
                     .align(Alignment.Center)

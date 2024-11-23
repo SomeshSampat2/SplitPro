@@ -25,7 +25,7 @@ import com.example.splitpro.ui.theme.PrimaryLight
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun CreateProfileScreen(
-    onNavigateToHome: () -> Unit,
+    onNavigateToMain: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
     var name by remember { mutableStateOf("") }
@@ -48,7 +48,7 @@ fun CreateProfileScreen(
             is ProfileState.PhoneNumberSaved -> {
                 snackbarMessage = "Profile completed successfully!"
                 showSnackbar = true
-                onNavigateToHome()
+                onNavigateToMain()
             }
             is ProfileState.Error -> {
                 snackbarMessage = (state as ProfileState.Error).message
