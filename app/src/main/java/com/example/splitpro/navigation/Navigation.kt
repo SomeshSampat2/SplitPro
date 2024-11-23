@@ -4,77 +4,62 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.splitpro.activity.ActivityScreen
 import com.example.splitpro.auth.LoginScreen
-import com.example.splitpro.groups.GroupsScreen
-import com.example.splitpro.home.HomeScreen
 import com.example.splitpro.profile.CreateProfileScreen
-import com.example.splitpro.profile.ProfileScreen
 import com.example.splitpro.splash.SplashScreen
-import com.example.splitpro.ui.components.BottomNavItem
+import com.example.splitpro.screens.MainScreen
 
-sealed class Screen(val route: String) {
-    object Splash : Screen("splash")
-    object Login : Screen("login")
-    object CreateProfile : Screen("create_profile")
-    object Home : Screen("main_home")
+object Routes {
+    const val SPLASH = "splash"
+    const val LOGIN = "login"
+    const val CREATE_PROFILE = "create_profile"
+    const val MAIN = "main"
 }
 
 @Composable
-fun Navigation(navController: NavHostController = rememberNavController()) {
+fun Navigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Routes.SPLASH
     ) {
-        composable(Screen.Splash.route) {
+        composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 },
-                onNavigateToHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                onNavigateToMain = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Screen.Login.route) {
+        composable(Routes.LOGIN) {
             LoginScreen(
                 onSignInClick = { /* Will be handled by AuthViewModel */ },
                 onNavigateToProfile = {
-                    navController.navigate(Screen.CreateProfile.route) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                    navController.navigate(Routes.CREATE_PROFILE) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
             )
         }
         
-        composable(Screen.CreateProfile.route) {
+        composable(Routes.CREATE_PROFILE) {
             CreateProfileScreen(
-                onNavigateToHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.CreateProfile.route) { inclusive = true }
+                onNavigateToMain = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.CREATE_PROFILE) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Screen.Home.route) {
-            HomeScreen(navController)
-        }
-        
-        composable(BottomNavItem.Groups.route) {
-            GroupsScreen(navController)
-        }
-        composable(BottomNavItem.Activity.route) {
-            ActivityScreen(navController)
-        }
-        composable(BottomNavItem.Profile.route) {
-            ProfileScreen(navController)
+        composable(Routes.MAIN) {
+            MainScreen()
         }
     }
 }
