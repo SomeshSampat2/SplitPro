@@ -1,7 +1,9 @@
 package com.example.splitpro.screens
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,26 +74,84 @@ fun HomeScreen(
         ) {
             // Header Section
             item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
-                        .graphicsLayer {
-                            alpha = if (isVisible) 1f else 0f
-                            translationY = if (isVisible) 0f else -50f
-                        }
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn() + slideInVertically(initialOffsetY = { -40 })
                 ) {
-                    Text(
-                        text = "✨ Money Magic",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Let's see where your money is dancing! 💃",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                MaterialTheme.colorScheme.surface,
+                                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                            )
+                            .shadow(
+                                elevation = 2.dp,
+                                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
+                            )
+                            .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Home",
+                                    style = MaterialTheme.typography.headlineMedium.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = (-0.5).sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Let's see where your money is dancing!",
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        letterSpacing = 0.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Quick Action Buttons Section
+            item {
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn() + slideInHorizontally()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        QuickActionButton(
+                            icon = R.drawable.ic_payment,
+                            label = "Add\nExpense",
+                            onClick = { /* TODO */ },
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickActionButton(
+                            icon = R.drawable.ic_split,
+                            label = "Split\nBill",
+                            onClick = { /* TODO */ },
+                            modifier = Modifier.weight(1f)
+                        )
+                        QuickActionButton(
+                            icon = R.drawable.ic_stats,
+                            label = "View\nStats",
+                            onClick = { /* TODO */ },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
 
@@ -102,39 +164,49 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp)
+                            .padding(horizontal = 16.dp)
                     ) {
-                        Text(
-                            text = "Total Balance",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                         Row(
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = if (uiState.monthSummary.totalAmount >= 0) "🤑" else "💸",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = if (uiState.monthSummary.totalAmount >= 0) 
-                                    "You'll receive" 
-                                else 
-                                    "You need to pay",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "₹${String.format("%.2f", uiState.monthSummary.totalAmount.absoluteValue)}",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = if (uiState.monthSummary.totalAmount >= 0)
+                                        SettledGreen
+                                    else
+                                        ExpenseRed
+                                )
+                                Text(
+                                    text = if (uiState.monthSummary.totalAmount >= 0) 
+                                        "to receive"
+                                    else 
+                                        "to pay",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(
+                                onClick = { /* TODO */ },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_arrow_forward),
+                                    contentDescription = "View details",
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
-                        Text(
-                            text = "₹${String.format("%.2f", uiState.monthSummary.totalAmount.absoluteValue)}",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (uiState.monthSummary.totalAmount >= 0)
-                                SettledGreen
-                            else
-                                ExpenseRed
-                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = if (uiState.monthSummary.totalAmount >= 0)
                                 "Great! You're owed money from your friends 🎉"
@@ -187,7 +259,7 @@ fun HomeScreen(
                     text = "Your Money Journey 📈",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
             }
 
@@ -201,8 +273,8 @@ fun HomeScreen(
                             dataPoints = uiState.monthlyExpenses,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(380.dp)
-                                .padding(horizontal = 8.dp)
+                                .height(220.dp)
+                                .padding(start = 8.dp, end = 16.dp)
                         )
                     }
                 }
@@ -214,63 +286,13 @@ fun HomeScreen(
                     visible = isVisible,
                     enter = fadeIn() + slideInHorizontally(initialOffsetX = { 100 })
                 ) {
-                    Row(
+                    SummarySection(
+                        weekSummary = uiState.weekSummary,
+                        monthSummary = uiState.monthSummary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        SummaryCard(
-                            title = "This Week 🎯",
-                            summary = uiState.weekSummary,
-                            modifier = Modifier
-                                .weight(1f)
-                                .shadow(
-                                    elevation = 8.dp,
-                                    shape = MaterialTheme.shapes.medium,
-                                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                )
-                                .clip(MaterialTheme.shapes.medium)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surface,
-                                            PrimaryLight.copy(alpha = 0.05f)
-                                        )
-                                    )
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                        )
-                        SummaryCard(
-                            title = "This Month 📅",
-                            summary = uiState.monthSummary,
-                            modifier = Modifier
-                                .weight(1f)
-                                .shadow(
-                                    elevation = 8.dp,
-                                    shape = MaterialTheme.shapes.medium,
-                                    spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                                )
-                                .clip(MaterialTheme.shapes.medium)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            MaterialTheme.colorScheme.surface,
-                                            PrimaryLight.copy(alpha = 0.05f)
-                                        )
-                                    )
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    shape = MaterialTheme.shapes.medium
-                                )
-                        )
-                    }
+                            .padding(horizontal = 16.dp, vertical = 24.dp)
+                    )
                 }
             }
 
@@ -283,7 +305,7 @@ fun HomeScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
+                            .padding(horizontal = 16.dp)
                     ) {
                         Text(
                             text = "Where did the money go? 🤔",
@@ -418,27 +440,27 @@ fun ExpenseChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(start = 8.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
     ) {
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(dataPoints) {
                     detectTapGestures { offset ->
-                        val chartWidth = size.width - 60.dp.toPx()  // Accounting for y-axis space
+                        val chartWidth = size.width - 40.dp.toPx()  // Reduced y-axis space
                         val pointSpacing = chartWidth / (dataPoints.size - 1)
-                        val adjustedX = offset.x - 60.dp.toPx()  // Adjusting for y-axis space
+                        val adjustedX = offset.x - 40.dp.toPx()  // Adjusted for new y-axis space
                         val index = (adjustedX / pointSpacing).toInt().coerceIn(0, dataPoints.size - 1)
                         selectedPoint = dataPoints[index]
                     }
                 }
         ) {
-            val yAxisSpace = 60.dp.toPx()
-            val xAxisSpace = 40.dp.toPx()
+            val yAxisSpace = 40.dp.toPx() // Reduced from 60.dp
+            val xAxisSpace = 24.dp.toPx() // Reduced from 40.dp
             val chartWidth = size.width - yAxisSpace
             val chartHeight = size.height - xAxisSpace
             val pointSpacing = chartWidth / (dataPoints.size - 1)
-            val heightRatio = chartHeight * 0.8f / range
+            val heightRatio = chartHeight * 0.9f / range // Increased from 0.8f
 
             // Draw grid lines and y-axis labels
             val gridLines = 5
@@ -455,16 +477,16 @@ fun ExpenseChart(
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
                 )
 
-                // Draw y-axis labels
+                // Draw y-axis labels with smaller text
                 val amount = minAmount + (range * i / gridLines)
                 drawContext.canvas.nativeCanvas.apply {
                     drawText(
                         "₹${amount.toInt()}",
-                        4.dp.toPx(),
+                        2.dp.toPx(),
                         y + 4.dp.toPx(),
                         android.graphics.Paint().apply {
                             color = onSurfaceColor.toArgb()
-                            textSize = 12.sp.toPx()
+                            textSize = 10.sp.toPx() // Reduced from 12.sp
                             textAlign = android.graphics.Paint.Align.LEFT
                             isAntiAlias = true
                         }
@@ -513,16 +535,16 @@ fun ExpenseChart(
                 val x = yAxisSpace + (index * pointSpacing)
                 val y = chartHeight - ((point.amount - minAmount) * heightRatio * progress)
 
-                // Draw date labels
+                // Draw date labels (only for first, middle, and last points)
                 if (index == 0 || index == dataPoints.size - 1 || index == dataPoints.size / 2) {
                     drawContext.canvas.nativeCanvas.apply {
                         drawText(
                             point.date.format(monthFormatter),
                             x,
-                            size.height - 8.dp.toPx(),
+                            size.height - 2.dp.toPx(),
                             android.graphics.Paint().apply {
                                 color = onSurfaceColor.toArgb()
-                                textSize = 12.sp.toPx()
+                                textSize = 10.sp.toPx() // Reduced from 12.sp
                                 textAlign = android.graphics.Paint.Align.CENTER
                                 isAntiAlias = true
                             }
@@ -533,12 +555,12 @@ fun ExpenseChart(
                 // Draw points
                 drawCircle(
                     color = surfaceColor,
-                    radius = 5.dp.toPx(),
+                    radius = 4.dp.toPx(), // Reduced from 5.dp
                     center = Offset(x, y)
                 )
                 drawCircle(
                     color = primaryColor,
-                    radius = 4.dp.toPx(),
+                    radius = 3.dp.toPx(), // Reduced from 4.dp
                     center = Offset(x, y)
                 )
             }
@@ -607,65 +629,154 @@ fun ExpenseChart(
 }
 
 @Composable
+private fun QuickActionButton(
+    @DrawableRes icon: Int,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier
+            .height(80.dp)
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(12.dp),
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
+            ),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                painter = painterResource(id = icon),
+                contentDescription = label,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                lineHeight = 16.sp
+            )
+        }
+    }
+}
+
+@Composable
 private fun SummaryCard(
     title: String,
     summary: ExpenseSummary,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    Surface(
+        modifier = modifier
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f)
+            )
+            .clip(RoundedCornerShape(16.dp)),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
         ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "₹${String.format("%.2f", summary.totalAmount)}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.height(4.dp))
-            
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${summary.numberOfTransactions} transactions",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium
                 )
-                
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = if (summary.percentageChange >= 0)
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                    else
-                        MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
-                ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_arrow_forward),
+                    contentDescription = "View details",
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column {
                     Text(
-                        text = "${if (summary.percentageChange >= 0) "+" else ""}${summary.percentageChange.toInt()}%",
+                        text = "₹${summary.totalAmount}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "${summary.numberOfTransactions} transactions",
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (summary.percentageChange >= 0)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SummarySection(
+    weekSummary: ExpenseSummary,
+    monthSummary: ExpenseSummary,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Expense Summary",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            SummaryCard(
+                title = "This Week",
+                summary = weekSummary,
+                modifier = Modifier.weight(1f)
+            )
+            SummaryCard(
+                title = "This Month",
+                summary = monthSummary,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
