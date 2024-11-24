@@ -27,7 +27,8 @@ sealed class BottomNavItem(val route: String, val icon: @Composable () -> Unit, 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    onNavigateToCreateGroup: () -> Unit = {}
+    onNavigateToCreateGroup: () -> Unit = {},
+    onNavigateToGroupDetails: (String) -> Unit = {}
 ) {
     val navController = rememberNavController()
     val items = listOf(
@@ -43,7 +44,8 @@ fun MainScreen(
         Box(modifier = Modifier.padding(paddingValues)) {
             NavigationGraph(
                 navController = navController,
-                onNavigateToCreateGroup = onNavigateToCreateGroup
+                onNavigateToCreateGroup = onNavigateToCreateGroup,
+                onNavigateToGroupDetails = onNavigateToGroupDetails
             )
         }
     }
@@ -86,11 +88,12 @@ fun BottomNav(navController: NavHostController, items: List<BottomNavItem>) {
 @Composable
 fun NavigationGraph(
     navController: NavHostController,
-    onNavigateToCreateGroup: () -> Unit
+    onNavigateToCreateGroup: () -> Unit,
+    onNavigateToGroupDetails: (String) -> Unit
 ) {
     NavHost(navController = navController, startDestination = BottomNavItem.Home.route) {
         composable(BottomNavItem.Home.route) { HomeScreen() }
-        composable(BottomNavItem.Groups.route) { GroupsScreen(onAddGroup = onNavigateToCreateGroup) }
+        composable(BottomNavItem.Groups.route) { GroupsScreen(onAddGroup = onNavigateToCreateGroup, onGroupClick = onNavigateToGroupDetails) }
         composable(BottomNavItem.Activity.route) { ActivityScreen() }
         composable(BottomNavItem.Profile.route) { ProfileScreen() }
     }
