@@ -2,6 +2,7 @@ package com.example.splitpro.screens
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +29,7 @@ import com.example.splitpro.ui.theme.*
 @Composable
 fun GroupsScreen(
     onAddGroup: () -> Unit = {},
+    onGroupClick: (String) -> Unit = {},
     viewModel: GroupsViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -125,7 +127,8 @@ fun GroupsScreen(
                 GroupCard(
                     group = group,
                     formattedDate = viewModel.formatDate(group.createdAt),
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    onClick = { onGroupClick(group.id) }
                 )
             }
         }
@@ -153,7 +156,8 @@ fun GroupsScreen(
 private fun GroupCard(
     group: Group,
     formattedDate: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -166,7 +170,8 @@ private fun GroupCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp),
+                .padding(20.dp)
+                .clickable(onClick = onClick),
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {

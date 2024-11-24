@@ -2,13 +2,16 @@ package com.example.splitpro.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.splitpro.auth.LoginScreen
 import com.example.splitpro.profile.CreateProfileScreen
 import com.example.splitpro.splash.SplashScreen
 import com.example.splitpro.screens.MainScreen
 import com.example.splitpro.screens.CreateGroupScreen
+import com.example.splitpro.screens.GroupDetailsScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -16,6 +19,9 @@ object Routes {
     const val CREATE_PROFILE = "create_profile"
     const val MAIN = "main"
     const val CREATE_GROUP = "create_group"
+    const val GROUP_DETAILS = "group_details/{groupId}"
+
+    fun groupDetails(groupId: String) = "group_details/$groupId"
 }
 
 @Composable
@@ -64,12 +70,28 @@ fun Navigation(navController: NavHostController) {
             MainScreen(
                 onNavigateToCreateGroup = {
                     navController.navigate(Routes.CREATE_GROUP)
+                },
+                onNavigateToGroupDetails = { groupId ->
+                    navController.navigate(Routes.groupDetails(groupId))
                 }
             )
         }
 
         composable(Routes.CREATE_GROUP) {
             CreateGroupScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Routes.GROUP_DETAILS,
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType }
+            )
+        ) {
+            GroupDetailsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }
