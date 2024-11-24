@@ -1,26 +1,28 @@
 package com.example.splitpro.screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
 import com.example.splitpro.ui.theme.*
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +31,11 @@ fun ActivityScreen(
     onNavigateBack: () -> Unit = {}
 ) {
     val state by viewModel.state.collectAsState()
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
     Box(
         modifier = Modifier
@@ -44,18 +51,30 @@ fun ActivityScreen(
             )
     ) {
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .animateContentSize()
         ) {
             TopAppBar(
                 title = {
                     Text(
                         "Activity",
                         color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.graphicsLayer {
+                            alpha = if (isVisible) 1f else 0f
+                            translationY = if (isVisible) 0f else -50f
+                        }
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.graphicsLayer {
+                            alpha = if (isVisible) 1f else 0f
+                            translationX = if (isVisible) 0f else -50f
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
@@ -72,16 +91,34 @@ fun ActivityScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                items(state.activities) { activity ->
-                    ActivityItem(
-                        activity = activity,
-                        viewModel = viewModel
-                    )
-                    if (activity != state.activities.last()) {
-                        Divider(
-                            modifier = Modifier.padding(vertical = 12.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                itemsIndexed(state.activities) { index, activity ->
+                    AnimatedVisibility(
+                        visible = isVisible,
+                        enter = fadeIn(
+                            animationSpec = tween(
+                                durationMillis = 300,
+                                delayMillis = index * 50
+                            )
+                        ) + slideInHorizontally(
+                            initialOffsetX = { 100 },
+                            animationSpec = tween(
+                                durationMillis = 300,
+                                delayMillis = index * 50
+                            )
                         )
+                    ) {
+                        Column {
+                            ActivityItem(
+                                activity = activity,
+                                viewModel = viewModel
+                            )
+                            if (activity != state.activities.last()) {
+                                Divider(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -99,7 +136,7 @@ fun ActivityItem(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Icon
+        // Icon with animation
         Box(
             modifier = Modifier
                 .size(40.dp)
@@ -109,11 +146,26 @@ fun ActivityItem(
                 ),
             contentAlignment = Alignment.Center
         ) {
+            val infiniteTransition = rememberInfiniteTransition()
+            val scale by infiniteTransition.animateFloat(
+                initialValue = 1f,
+                targetValue = 1.1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1000),
+                    repeatMode = RepeatMode.Reverse
+                )
+            )
+
             Icon(
                 painter = painterResource(id = getActivityIcon(activity.type)),
                 contentDescription = null,
                 tint = getActivityColor(activity.type),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier
+                    .size(20.dp)
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
             )
         }
 

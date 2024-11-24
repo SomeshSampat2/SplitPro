@@ -8,12 +8,14 @@ import com.example.splitpro.auth.LoginScreen
 import com.example.splitpro.profile.CreateProfileScreen
 import com.example.splitpro.splash.SplashScreen
 import com.example.splitpro.screens.MainScreen
+import com.example.splitpro.screens.CreateGroupScreen
 
 object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val CREATE_PROFILE = "create_profile"
     const val MAIN = "main"
+    const val CREATE_GROUP = "create_group"
 }
 
 @Composable
@@ -59,7 +61,19 @@ fun Navigation(navController: NavHostController) {
         }
 
         composable(Routes.MAIN) {
-            MainScreen()
+            MainScreen(
+                onNavigateToCreateGroup = {
+                    navController.navigate(Routes.CREATE_GROUP)
+                }
+            )
+        }
+
+        composable(Routes.CREATE_GROUP) {
+            CreateGroupScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }
