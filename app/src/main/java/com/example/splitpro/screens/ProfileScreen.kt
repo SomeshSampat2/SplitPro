@@ -1,28 +1,30 @@
 package com.example.splitpro.screens
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.splitpro.R
 import com.example.splitpro.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onSignOut: () -> Unit = {},
@@ -37,185 +39,262 @@ fun ProfileScreen(
             .background(MaterialTheme.colorScheme.surface)
             .verticalScroll(scrollState)
     ) {
-        // Header with Profile Initial
+        // Animated Header with Profile Initial
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.surface,
-                            MaterialTheme.colorScheme.surface,
-                            PrimaryLight.copy(alpha = 0.15f)
+                            Primary.copy(alpha = 0.95f),
+                            Primary.copy(alpha = 0.85f),
+                            MaterialTheme.colorScheme.surface
                         ),
                         startY = 0f,
-                        endY = 300f
+                        endY = 400f
                     )
                 )
+                .padding(bottom = 32.dp)
         ) {
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(24.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Initial Circle
+                // Animated Profile Circle
                 Box(
                     modifier = Modifier
-                        .size(56.dp)
+                        .size(100.dp)
                         .clip(CircleShape)
-                        .background(Primary.copy(alpha = 0.9f)),
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .shadow(8.dp, CircleShape)
+                        .animateContentSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = state.name.firstOrNull()?.uppercase() ?: "?",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.surface,
+                        text = state.name.firstOrNull()?.uppercase() ?: "🤔",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
                 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = state.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Sup, ${state.name.split(" ").first()} ! 👋",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        
+                        Text(
+                            text = state.email,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Black.copy(alpha = 0.8f)
+                        )
+                    }
+                    
+                    IconButton(
+                        onClick = { /* TODO: Implement edit profile */ },
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .background(Color.Black.copy(alpha = 0.1f), CircleShape)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_edit),
+                            contentDescription = "Edit Profile",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Fun Balance Summary Card
+        Card(
+            modifier = Modifier
+                .offset(y = (-20).dp)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .shadow(8.dp, RoundedCornerShape(24.dp)),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "💰 Money Matters",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    BalanceItem(
+                        title = "Gotta Pay 💸",
+                        amount = state.totalToPay,
+                        color = Error
                     )
+                    BalanceItem(
+                        title = "Gonna Get 🤑",
+                        amount = state.totalToReceive,
+                        color = Success
+                    )
+                }
+                
+                Divider(
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = state.email,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        text = "The Bottom Line 📊",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    
+                    val netBalance = state.totalToReceive - state.totalToPay
+                    Text(
+                        text = "₹$netBalance ${if (netBalance >= 0) "🎉" else "😅"}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (netBalance >= 0) Success else Error,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        // Balance Summary
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                BalanceItem(
-                    title = "To Pay",
-                    amount = state.totalToPay,
-                    color = Error
-                )
-                Divider(
-                    modifier = Modifier
-                        .width(1.dp)
-                        .height(50.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-                )
-                BalanceItem(
-                    title = "To Receive",
-                    amount = state.totalToReceive,
-                    color = Success
-                )
-            }
-            
-            Divider(
-                modifier = Modifier.padding(horizontal = 20.dp),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
-            )
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Net Balance",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-                Text(
-                    text = "₹${state.totalToReceive - state.totalToPay}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (state.totalToReceive - state.totalToPay >= 0) Success else Error,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-
-        // Profile Information
+        // Profile Stats
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
             Text(
-                text = "Profile Information",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
+                text = "🎯 Your Stats",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 20.dp)
             )
             
-            ProfileSection(
-                title = "Name",
-                value = state.name,
-                onEdit = { /* TODO: Implement name edit */ }
+            ProfileStatsItem(
+                icon = R.drawable.ic_group,
+                title = "Squad Size",
+                value = "420 Homies 🤝"
             )
-
-            ProfileSection(
-                title = "Email",
-                value = state.email,
-                onEdit = { /* TODO: Implement email edit */ }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ProfileStatsItem(
+                icon = R.drawable.ic_payment,
+                title = "Total Splits",
+                value = "69 Epic Splits 💪"
             )
-
-            ProfileSection(
-                title = "Phone",
-                value = state.phoneNumber,
-                onEdit = { /* TODO: Implement phone edit */ }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            ProfileStatsItem(
+                icon = R.drawable.ic_trophy,
+                title = "Settlement Score",
+                value = "Pro Splitter 🏆"
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Logout Button
-        TextButton(
-            onClick = {
-                viewModel.signOut()
-                onSignOut()
-            },
+        // Profile Actions
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = Error
-            )
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.ExitToApp,
-                contentDescription = "Logout",
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Sign Out",
-                style = MaterialTheme.typography.labelLarge
+                text = "⚙️ Settings & Stuff",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            ProfileActionButton(
+                icon = R.drawable.ic_notification,
+                text = "Notifications",
+                onClick = { /* TODO */ }
+            )
+            
+            ProfileActionButton(
+                icon = R.drawable.ic_security,
+                text = "Privacy Policy",
+                onClick = { /* TODO */ }
+            )
+            
+            ProfileActionButton(
+                icon = R.drawable.ic_help,
+                text = "Help & Support",
+                onClick = { /* TODO */ }
             )
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Logout Section
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(
+                onClick = {
+                    viewModel.signOut()
+                    onSignOut()
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_logout_small),
+                    contentDescription = "Sign Out",
+                    tint = Error.copy(alpha = 0.75f),
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "Sign out",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Error.copy(alpha = 0.75f)
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }
 
 @Composable
-private fun BalanceItem(
+fun BalanceItem(
     title: String,
     amount: Double,
     color: Color,
@@ -223,17 +302,16 @@ private fun BalanceItem(
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalAlignment = Alignment.Start
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
         Text(
             text = "₹$amount",
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge,
             color = color,
             fontWeight = FontWeight.Bold
         )
@@ -241,51 +319,88 @@ private fun BalanceItem(
 }
 
 @Composable
-private fun ProfileSection(
+fun ProfileStatsItem(
+    @DrawableRes icon: Int,
     title: String,
-    value: String,
-    onEdit: () -> Unit
+    value: String
 ) {
-    Surface(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp,
-        shape = RoundedCornerShape(12.dp)
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp, horizontal = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = Primary,
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(end = 16.dp)
+            )
+            
+            Column(
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
                 Text(
-                    text = value.ifEmpty { "Not set" },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (value.isEmpty()) 
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                        else MaterialTheme.colorScheme.onSurface
+                    text = value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
-            IconButton(
-                onClick = onEdit,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit $title",
-                    tint = Primary.copy(alpha = 0.8f),
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+        }
+    }
+}
+
+@Composable
+fun ProfileActionButton(
+    @DrawableRes icon: Int,
+    text: String,
+    onClick: () -> Unit
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = ButtonDefaults.textButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                painter = painterResource(R.drawable.ic_arrow_forward),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
