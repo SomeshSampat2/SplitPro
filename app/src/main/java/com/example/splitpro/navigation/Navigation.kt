@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.splitpro.auth.LoginScreen
-import com.example.splitpro.profile.CreateProfileScreen
+import com.example.splitpro.CreateProfile.CreateProfileScreen
 import com.example.splitpro.splash.SplashScreen
 import com.example.splitpro.screens.MainScreen
 import com.example.splitpro.screens.CreateGroupScreen
@@ -52,6 +52,11 @@ fun Navigation(navController: NavHostController) {
                     navController.navigate(Routes.CREATE_PROFILE) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
+                },
+                onNavigateToMain = {
+                    navController.navigate(Routes.MAIN) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
                 }
             )
         }
@@ -73,6 +78,11 @@ fun Navigation(navController: NavHostController) {
                 },
                 onNavigateToGroupDetails = { groupId ->
                     navController.navigate(Routes.groupDetails(groupId))
+                },
+                onSignOut = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.MAIN) { inclusive = true }
+                    }
                 }
             )
         }

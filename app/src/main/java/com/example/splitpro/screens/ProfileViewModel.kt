@@ -2,6 +2,7 @@ package com.example.splitpro.screens
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlin.random.Random
@@ -12,12 +13,14 @@ data class ProfileState(
     val phoneNumber: String = "+91 9876543210",
     val profileColor: Color = generateRandomColor(),
     val totalToPay: Double = 1250.50,
-    val totalToReceive: Double = 2500.75
+    val totalToReceive: Double = 2500.75,
+    val showSignOutMessage: Boolean = false
 )
 
 class ProfileViewModel : ViewModel() {
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state
+    private val auth = FirebaseAuth.getInstance()
 
     fun updateName(name: String) {
         _state.value = _state.value.copy(name = name)
@@ -32,7 +35,12 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun signOut() {
-        // TODO: Implement sign out functionality when needed
+        auth.signOut()
+        _state.value = _state.value.copy(showSignOutMessage = true)
+    }
+
+    fun signOutMessageShown() {
+        _state.value = _state.value.copy(showSignOutMessage = false)
     }
 }
 

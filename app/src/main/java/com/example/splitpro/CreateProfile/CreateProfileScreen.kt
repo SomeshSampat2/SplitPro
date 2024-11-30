@@ -1,4 +1,4 @@
-package com.example.splitpro.profile
+package com.example.splitpro.CreateProfile
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background

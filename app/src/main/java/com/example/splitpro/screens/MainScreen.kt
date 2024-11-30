@@ -28,7 +28,8 @@ sealed class BottomNavItem(val route: String, val icon: @Composable () -> Unit, 
 @Composable
 fun MainScreen(
     onNavigateToCreateGroup: () -> Unit = {},
-    onNavigateToGroupDetails: (String) -> Unit = {}
+    onNavigateToGroupDetails: (String) -> Unit = {},
+    onSignOut: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val items = listOf(
@@ -45,7 +46,8 @@ fun MainScreen(
             NavigationGraph(
                 navController = navController,
                 onNavigateToCreateGroup = onNavigateToCreateGroup,
-                onNavigateToGroupDetails = onNavigateToGroupDetails
+                onNavigateToGroupDetails = onNavigateToGroupDetails,
+                onSignOut = onSignOut
             )
         }
     }
@@ -89,12 +91,13 @@ fun BottomNav(navController: NavHostController, items: List<BottomNavItem>) {
 fun NavigationGraph(
     navController: NavHostController,
     onNavigateToCreateGroup: () -> Unit,
-    onNavigateToGroupDetails: (String) -> Unit
+    onNavigateToGroupDetails: (String) -> Unit,
+    onSignOut: () -> Unit
 ) {
     NavHost(navController = navController, startDestination = BottomNavItem.Home.route) {
         composable(BottomNavItem.Home.route) { HomeScreen() }
         composable(BottomNavItem.Groups.route) { GroupsScreen(onAddGroup = onNavigateToCreateGroup, onGroupClick = onNavigateToGroupDetails) }
         composable(BottomNavItem.Activity.route) { ActivityScreen() }
-        composable(BottomNavItem.Profile.route) { ProfileScreen() }
+        composable(BottomNavItem.Profile.route) { ProfileScreen(onSignOut = onSignOut) }
     }
 }

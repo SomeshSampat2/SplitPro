@@ -25,7 +25,11 @@ class AuthViewModel : ViewModel() {
     init {
         // Check if user is already signed in
         auth.currentUser?.let { user ->
-            _state.value = AuthState.Success(user.uid)
+            viewModelScope.launch {
+                val userRef = firestore.collection("Users").document(user.uid)
+                val userSnapshot = userRef.get().await()
+                _state.value = AuthState.SignedIn(isNewUser = !userSnapshot.exists(), userId = user.uid)
+            }
         }
     }
 
@@ -50,11 +54,10 @@ class AuthViewModel : ViewModel() {
                             "email" to firebaseUser.email
                         )
                         userRef.set(userData).await()
-                        // Navigate to profile creation for new users
-                        _state.value = AuthState.SignedIn(shouldNavigateToProfile = true)
+                        _state.value = AuthState.SignedIn(isNewUser = true, userId = firebaseUser.uid)
                     } else {
                         // Existing user, just update state
-                        _state.value = AuthState.Success(firebaseUser.uid)
+                        _state.value = AuthState.SignedIn(isNewUser = false, userId = firebaseUser.uid)
                     }
                     
                     Toast.makeText(context, "Sign in successful!", Toast.LENGTH_SHORT).show()
