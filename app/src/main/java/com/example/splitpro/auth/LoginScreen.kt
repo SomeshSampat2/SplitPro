@@ -39,6 +39,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 fun LoginScreen(
     onSignInClick: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToMain: () -> Unit,
     viewModel: AuthViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
@@ -69,8 +70,10 @@ fun LoginScreen(
     LaunchedEffect(authState) {
         when (authState) {
             is AuthState.SignedIn -> {
-                if ((authState as AuthState.SignedIn).shouldNavigateToProfile) {
+                if ((authState as AuthState.SignedIn).isNewUser) {
                     onNavigateToProfile()
+                } else {
+                    onNavigateToMain()
                 }
             }
             else -> {}

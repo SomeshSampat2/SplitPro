@@ -20,23 +20,22 @@ fun SplashScreen(
         val auth = FirebaseAuth.getInstance()
         val firestore = FirebaseFirestore.getInstance()
         
-        if (auth.currentUser == null) {
+        if (auth.currentUser != null) {
             try {
                 // Check if user document exists in Firestore
-//                val userDoc = firestore.collection("Users")
-//                    .document(auth.currentUser!!.uid)
-//                    .get()
-//                    .await()
-//
-//                if (userDoc.exists()) {
-//                    onNavigateToMain()
-//                } else {
-//                    // If somehow user auth exists but no Firestore document,
-//                    // sign out and go to login
-//                    auth.signOut()
-//                    onNavigateToLogin()
-//                }
-                onNavigateToMain()
+                val userDoc = firestore.collection("Users")
+                    .document(auth.currentUser!!.uid)
+                    .get()
+                    .await()
+
+                if (userDoc.exists()) {
+                    onNavigateToMain()
+                } else {
+                    // If somehow user auth exists but no Firestore document,
+                    // sign out and go to login
+                    auth.signOut()
+                    onNavigateToLogin()
+                }
             } catch (e: Exception) {
                 // Handle error case
                 auth.signOut()

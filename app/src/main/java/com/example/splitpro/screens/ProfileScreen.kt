@@ -1,5 +1,6 @@
 package com.example.splitpro.screens
 
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,6 +34,15 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
+    LaunchedEffect(state.showSignOutMessage) {
+        if (state.showSignOutMessage) {
+            Toast.makeText(context, "Signed out successfully", Toast.LENGTH_SHORT).show()
+            viewModel.signOutMessageShown()
+            onSignOut()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -270,7 +281,6 @@ fun ProfileScreen(
             TextButton(
                 onClick = {
                     viewModel.signOut()
-                    onSignOut()
                 },
                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
             ) {
