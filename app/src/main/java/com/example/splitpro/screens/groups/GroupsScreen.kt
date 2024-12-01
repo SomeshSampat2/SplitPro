@@ -46,7 +46,7 @@ fun GroupsScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp) // Added bottom padding for FAB
+            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
         ) {
             // Enhanced Header
             item {
@@ -102,31 +102,78 @@ fun GroupsScreen(
                 }
             }
 
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-            }
+            when {
+                state.isLoading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+                state.groups.isEmpty() -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_group),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .padding(8.dp),
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No Groups Yet",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Create a group to start splitting expenses",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    item {
+                        Text(
+                            text = "${state.groups.size} Active Groups",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+                        )
+                    }
 
-            // Groups List with section header
-            item {
-                Text(
-                    text = "${state.groups.size} Active Groups",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                )
-            }
-
-            items(
-                items = state.groups,
-                key = { it.id }
-            ) { group ->
-                GroupCard(
-                    group = group,
-                    formattedDate = viewModel.formatDate(group.createdAt),
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
-                    onClick = { onGroupClick(group.id) }
-                )
+                    items(
+                        items = state.groups,
+                        key = { it.id }
+                    ) { group ->
+                        GroupCard(
+                            group = group,
+                            formattedDate = viewModel.formatDate(group.createdAt),
+                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                            onClick = { onGroupClick(group.id) }
+                        )
+                    }
+                }
             }
         }
 

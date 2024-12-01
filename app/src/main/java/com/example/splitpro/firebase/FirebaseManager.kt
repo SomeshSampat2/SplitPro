@@ -98,6 +98,18 @@ class FirebaseManager private constructor() {
     }
 
     // Group Methods
+    suspend fun getUserGroups(): List<Map<String, Any>> {
+        val currentUserId = currentUser?.uid ?: throw Exception("User not logged in")
+        return firestore.collection(COLLECTION_GROUPS)
+            .whereArrayContains(GroupFields.MEMBERS, currentUserId)
+            .get()
+            .await()
+            .documents
+            .mapNotNull { doc -> 
+                doc.data?.plus(mapOf("id" to doc.id))
+            }
+    }
+
     suspend fun createGroup(groupName: String, groupType: String): String {
         val currentUserId = currentUser?.uid ?: throw Exception("User not authenticated")
         

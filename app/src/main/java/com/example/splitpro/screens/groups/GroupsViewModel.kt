@@ -15,155 +15,74 @@ data class Group(
     val name: String,
     val createdAt: Date,
     val memberCount: Int,
-    val balance: Double // positive means you'll receive, negative means you owe
+    val balance: Double = 0.0 // For now, default to 0 since we haven't implemented expenses
 )
 
 data class GroupsState(
-    val groups: List<Group> = listOf(
-        Group(
-            id = "1",
-            name = "Goa Trip 2024",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -2) }.time,
-            memberCount = 5,
-            balance = -1250.50
-        ),
-        Group(
-            id = "2",
-            name = "Monthly Flatmates",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -15) }.time,
-            memberCount = 3,
-            balance = 2500.75
-        ),
-        Group(
-            id = "3",
-            name = "Office Lunch Group",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -7) }.time,
-            memberCount = 8,
-            balance = -750.25
-        ),
-        Group(
-            id = "4",
-            name = "Weekend Party",
-            createdAt = Calendar.getInstance().apply { add(Calendar.HOUR, -12) }.time,
-            memberCount = 4,
-            balance = 1000.00
-        ),
-        Group(
-            id = "5",
-            name = "Movie Night",
-            createdAt = Calendar.getInstance().apply { add(Calendar.HOUR, -6) }.time,
-            memberCount = 6,
-            balance = -450.75
-        ),
-        Group(
-            id = "6",
-            name = "Birthday Celebration",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -1) }.time,
-            memberCount = 12,
-            balance = 875.25
-        ),
-        Group(
-            id = "7",
-            name = "Road Trip",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -5) }.time,
-            memberCount = 7,
-            balance = -2100.00
-        ),
-        Group(
-            id = "8",
-            name = "Dinner Club",
-            createdAt = Calendar.getInstance().apply { add(Calendar.HOUR, -36) }.time,
-            memberCount = 5,
-            balance = 1500.50
-        ),
-        Group(
-            id = "9",
-            name = "Shopping Split",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -3) }.time,
-            memberCount = 3,
-            balance = -675.25
-        ),
-        Group(
-            id = "10",
-            name = "Utility Bills",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -30) }.time,
-            memberCount = 4,
-            balance = 3250.00
-        ),
-        Group(
-            id = "11",
-            name = "Gaming Night",
-            createdAt = Calendar.getInstance().apply { add(Calendar.HOUR, -24) }.time,
-            memberCount = 6,
-            balance = -325.50
-        ),
-        Group(
-            id = "12",
-            name = "Beach Day",
-            createdAt = Calendar.getInstance().apply { add(Calendar.DAY_OF_MONTH, -4) }.time,
-            memberCount = 8,
-            balance = 950.75
-        )
-    ),
+    val groups: List<Group> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
-    val successMessage: String? = null,
-    val createdGroupId: String? = null
+    val error: String? = null
 )
 
 class GroupsViewModel : ViewModel() {
     private val firebaseManager = FirebaseManager.getInstance()
-    
     private val _state = MutableStateFlow(GroupsState())
     val state: StateFlow<GroupsState> = _state.asStateFlow()
 
-    fun createGroup(groupName: String, groupType: String) {
+    init {
+        loadGroups()
+    }
+
+    private fun loadGroups() {
         viewModelScope.launch {
             try {
+                _state.value = _state.value.copy(isLoading = true)
+                val groupsData = firebaseManager.getUserGroups()
+                val groups = groupsData.map { data ->
+                    Group(
+                        id = data["id"] as String,
+                        name = data["name"] as? String ?: "Unnamed Group",
+                        createdAt = (data["createdAt"] as? com.google.firebase.Timestamp)?.toDate() ?: Date(),
+                        memberCount = (data["members"] as? List<*>)?.size ?: 0
+                    )
+                }
                 _state.value = _state.value.copy(
-                    isLoading = true,
-                    error = null,
-                    successMessage = null,
-                    createdGroupId = null
-                )
-
-                val groupId = firebaseManager.createGroup(groupName, groupType)
-                
-                _state.value = _state.value.copy(
+                    groups = groups,
                     isLoading = false,
-                    successMessage = "Group created successfully!",
-                    createdGroupId = groupId
+                    error = null
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Failed to create group",
-                    createdGroupId = null
+                    error = e.message
                 )
             }
         }
     }
 
-    fun clearMessages() {
-        _state.value = _state.value.copy(
-            error = null,
-            successMessage = null,
-            createdGroupId = null
-        )
+    suspend fun createGroup(groupName: String, groupType: String): String {
+        try {
+            val groupId = firebaseManager.createGroup(groupName, groupType)
+            loadGroups() // Refresh the groups list
+            return groupId
+        } catch (e: Exception) {
+            _state.value = _state.value.copy(error = e.message)
+            throw e
+        }
     }
 
-    private val dateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
-    private val yearFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+    fun clearMessages() {
+        _state.value = _state.value.copy(error = null)
+    }
 
     fun formatDate(date: Date): String {
         val now = Calendar.getInstance()
-        val createdAt = Calendar.getInstance().apply { time = date }
+        val dateCalendar = Calendar.getInstance().apply { time = date }
 
         return when {
-            isSameDay(now, createdAt) -> "Today"
-            isYesterday(now, createdAt) -> "Yesterday"
-            now.get(Calendar.YEAR) == createdAt.get(Calendar.YEAR) -> dateFormat.format(date)
-            else -> yearFormat.format(date)
+            isSameDay(now, dateCalendar) -> "Today"
+            isYesterday(now, dateCalendar) -> "Yesterday"
+            else -> SimpleDateFormat("MMM d", Locale.getDefault()).format(date)
         }
     }
 
