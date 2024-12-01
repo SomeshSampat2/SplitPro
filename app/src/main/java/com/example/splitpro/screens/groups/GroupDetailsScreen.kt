@@ -32,7 +32,8 @@ import java.util.*
 fun GroupDetailsScreen(
     groupId: String,
     viewModel: GroupDetailsViewModel = viewModel(),
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onAddMember: () -> Unit
 ) {
     val details by viewModel.groupDetails.collectAsState()
 
@@ -115,9 +116,9 @@ fun GroupDetailsScreen(
                 // Members Section
                 item {
                     if (groupDetails.members.isEmpty()) {
-                        EmptyMembersSection()
+                        EmptyMembersSection(onAddMember = onAddMember)
                     } else {
-                        MembersSection(members = groupDetails.members)
+                        MembersSection(members = groupDetails.members, onAddMember = onAddMember)
                     }
                 }
             }
@@ -153,7 +154,7 @@ private fun EmptyEntriesSection() {
 }
 
 @Composable
-private fun EmptyMembersSection() {
+private fun EmptyMembersSection(onAddMember: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -177,7 +178,7 @@ private fun EmptyMembersSection() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             FilledTonalButton(
-                onClick = { /* TODO: Navigate to Add Members */ },
+                onClick = { onAddMember() },
                 modifier = Modifier.padding(horizontal = 16.dp)
             ) {
                 Icon(
@@ -309,7 +310,7 @@ private fun EntryItem(entry: GroupEntry) {
 }
 
 @Composable
-private fun MembersSection(members: List<GroupMember>) {
+private fun MembersSection(members: List<GroupMember>, onAddMember: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     
     Column(
@@ -329,7 +330,7 @@ private fun MembersSection(members: List<GroupMember>) {
                 style = MaterialTheme.typography.titleLarge
             )
             IconButton(
-                onClick = { /* TODO: Navigate to Add Members */ },
+                onClick = { onAddMember() },
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
