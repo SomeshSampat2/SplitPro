@@ -1,4 +1,4 @@
-package com.example.splitpro.screens
+package com.example.splitpro.screens.activity
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
@@ -22,7 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
 import com.example.splitpro.ui.theme.*
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

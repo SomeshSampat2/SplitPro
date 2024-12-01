@@ -1,4 +1,4 @@
-package com.example.splitpro.CreateProfile
+package com.example.splitpro.screens.createProfile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

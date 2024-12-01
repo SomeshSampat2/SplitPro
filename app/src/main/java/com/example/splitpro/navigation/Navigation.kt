@@ -7,11 +7,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.splitpro.auth.LoginScreen
-import com.example.splitpro.CreateProfile.CreateProfileScreen
+import com.example.splitpro.screens.createProfile.CreateProfileScreen
 import com.example.splitpro.splash.SplashScreen
 import com.example.splitpro.screens.MainScreen
-import com.example.splitpro.screens.CreateGroupScreen
-import com.example.splitpro.screens.GroupDetailsScreen
+import com.example.splitpro.screens.createGroup.CreateGroupScreen
+import com.example.splitpro.screens.groups.GroupDetailsScreen
 
 object Routes {
     const val SPLASH = "splash"
