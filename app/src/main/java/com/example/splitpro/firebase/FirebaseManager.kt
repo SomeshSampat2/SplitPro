@@ -97,6 +97,7 @@ class FirebaseManager private constructor() {
         }
     }
 
+    // Group Methods
     suspend fun createGroup(groupName: String, groupType: String): String {
         val currentUserId = currentUser?.uid ?: throw Exception("User not authenticated")
         
@@ -114,5 +115,17 @@ class FirebaseManager private constructor() {
             .await()
 
         return groupRef.id
+    }
+
+    suspend fun getGroupDetails(groupId: String): Map<String, Any>? {
+        return try {
+            firestore.collection(COLLECTION_GROUPS)
+                .document(groupId)
+                .get()
+                .await()
+                .data
+        } catch (e: Exception) {
+            null
+        }
     }
 }

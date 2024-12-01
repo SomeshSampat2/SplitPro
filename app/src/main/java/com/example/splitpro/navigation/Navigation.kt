@@ -120,8 +120,12 @@ fun Navigation(navController: NavHostController) {
             arguments = listOf(
                 navArgument("groupId") { type = NavType.StringType }
             )
-        ) {
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId")
+                ?: return@composable
+                
             GroupDetailsScreen(
+                groupId = groupId,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
