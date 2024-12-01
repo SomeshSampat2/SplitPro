@@ -1,4 +1,4 @@
-package com.example.splitpro.screens
+package com.example.splitpro.screens.createGroup
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState

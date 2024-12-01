@@ -15,6 +15,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.splitpro.screens.activity.ActivityScreen
+import com.example.splitpro.screens.groups.GroupsScreen
+import com.example.splitpro.screens.home.HomeScreen
+import com.example.splitpro.screens.profile.ProfileScreen
 import com.example.splitpro.ui.theme.Primary
 
 sealed class BottomNavItem(val route: String, val icon: @Composable () -> Unit, val label: String) {

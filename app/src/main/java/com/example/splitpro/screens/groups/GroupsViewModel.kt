@@ -1,4 +1,4 @@
-package com.example.splitpro.screens
+package com.example.splitpro.screens.groups
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

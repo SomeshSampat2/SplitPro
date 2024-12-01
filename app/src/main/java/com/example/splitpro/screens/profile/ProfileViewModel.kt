@@ -1,4 +1,4 @@
-package com.example.splitpro.screens
+package com.example.splitpro.screens.profile
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
