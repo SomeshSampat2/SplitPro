@@ -12,6 +12,7 @@ import com.example.splitpro.splash.SplashScreen
 import com.example.splitpro.screens.MainScreen
 import com.example.splitpro.screens.groups.CreateGroupScreen
 import com.example.splitpro.screens.groups.GroupDetailsScreen
+import com.example.splitpro.screens.groups.AddGroupMemberScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -20,8 +21,10 @@ object Routes {
     const val MAIN = "main"
     const val CREATE_GROUP = "create_group"
     const val GROUP_DETAILS = "group_details/{groupId}"
+    const val ADD_GROUP_MEMBER = "add_group_member/{groupId}"
 
     fun groupDetails(groupId: String) = "group_details/$groupId"
+    fun addGroupMember(groupId: String) = "add_group_member/$groupId"
 }
 
 object Screen {
@@ -31,6 +34,11 @@ object Screen {
 
     object GroupDetails {
         const val route = "group_details"
+        fun createRoute(groupId: String) = "$route/$groupId"
+    }
+
+    object AddGroupMember {
+        const val route = "add_group_member"
         fun createRoute(groupId: String) = "$route/$groupId"
     }
 
@@ -121,10 +129,26 @@ fun Navigation(navController: NavHostController) {
                 navArgument("groupId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
-            val groupId = backStackEntry.arguments?.getString("groupId")
-                ?: return@composable
-                
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
             GroupDetailsScreen(
+                groupId = groupId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddMember = {
+                    navController.navigate(Routes.addGroupMember(groupId))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.ADD_GROUP_MEMBER,
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+            AddGroupMemberScreen(
                 groupId = groupId,
                 onNavigateBack = {
                     navController.popBackStack()
