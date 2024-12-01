@@ -1,8 +1,12 @@
 package com.example.splitpro.screens.groups
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.splitpro.firebase.FirebaseManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -100,12 +104,53 @@ data class GroupsState(
             memberCount = 8,
             balance = 950.75
         )
-    )
+    ),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val successMessage: String? = null,
+    val createdGroupId: String? = null
 )
 
 class GroupsViewModel : ViewModel() {
+    private val firebaseManager = FirebaseManager.getInstance()
+    
     private val _state = MutableStateFlow(GroupsState())
-    val state: StateFlow<GroupsState> = _state
+    val state: StateFlow<GroupsState> = _state.asStateFlow()
+
+    fun createGroup(groupName: String, groupType: String) {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(
+                    isLoading = true,
+                    error = null,
+                    successMessage = null,
+                    createdGroupId = null
+                )
+
+                val groupId = firebaseManager.createGroup(groupName, groupType)
+                
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    successMessage = "Group created successfully!",
+                    createdGroupId = groupId
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to create group",
+                    createdGroupId = null
+                )
+            }
+        }
+    }
+
+    fun clearMessages() {
+        _state.value = _state.value.copy(
+            error = null,
+            successMessage = null,
+            createdGroupId = null
+        )
+    }
 
     private val dateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
     private val yearFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())

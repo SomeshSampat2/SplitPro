@@ -3,6 +3,7 @@ package com.example.splitpro.firebase
 object FirebaseConstants {
     // Collections
     const val COLLECTION_USERS = "Users"
+    const val COLLECTION_GROUPS = "groups"
     
     // Document Fields - User
     object UserFields {
@@ -11,6 +12,16 @@ object FirebaseConstants {
         const val PHONE_NUMBER = "phoneNumber"
         const val CREATED_AT = "createdAt"
         const val UPDATED_AT = "updatedAt"
+    }
+    
+    // Document Fields - Group
+    object GroupFields {
+        const val NAME = "name"
+        const val TYPE = "type"
+        const val CREATED_BY = "created_by"
+        const val CREATED_AT = "created_at"
+        const val UPDATED_AT = "updated_at"
+        const val MEMBERS = "members"
     }
     
     // Error Messages
