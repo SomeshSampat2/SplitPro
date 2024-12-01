@@ -21,6 +21,7 @@ import com.example.splitpro.ui.theme.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 enum class GroupType {
     TRIP, HOME, COUPLE, ROOMMATES, FAMILY, FRIENDS, EVENT, OFFICE, PROJECT, OTHERS
@@ -37,16 +38,7 @@ fun CreateGroupScreen(
     var selectedType by remember { mutableStateOf(GroupType.TRIP) }
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
-
-    LaunchedEffect(state.successMessage, state.createdGroupId) {
-        if (state.successMessage != null && state.createdGroupId != null) {
-            Toast.makeText(context, state.successMessage, Toast.LENGTH_SHORT).show()
-            state.createdGroupId?.let{ id ->
-                onNavigateToGroupDetails(id)
-            }
-            viewModel.clearMessages()
-        }
-    }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.error) {
         state.error?.let { error ->
@@ -224,7 +216,15 @@ fun CreateGroupScreen(
             Button(
                 onClick = {
                     if (groupName.isNotBlank() && selectedType.name.isNotBlank()) {
-                        viewModel.createGroup(groupName, selectedType.name)
+                        scope.launch {
+                            try {
+                                val groupId = viewModel.createGroup(groupName, selectedType.name)
+                                Toast.makeText(context, "Group created successfully!", Toast.LENGTH_SHORT).show()
+                                onNavigateToGroupDetails(groupId)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, e.message ?: "Failed to create group", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     } else {
                         Toast.makeText(
                             context,
