@@ -2,40 +2,66 @@ package com.example.splitpro.screens
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewModelScope
+import com.example.splitpro.firebase.FirebaseManager
+import com.example.splitpro.firebase.FirebaseConstants.UserFields
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlin.random.Random
+import kotlinx.coroutines.launch
 
 data class ProfileState(
-    val name: String = "John Doe",
-    val email: String = "john.doe@example.com",
-    val phoneNumber: String = "+91 9876543210",
+    val name: String = "",
+    val email: String = "",
+    val phoneNumber: String = "",
     val profileColor: Color = generateRandomColor(),
     val totalToPay: Double = 1250.50,
     val totalToReceive: Double = 2500.75,
-    val showSignOutMessage: Boolean = false
+    val showSignOutMessage: Boolean = false,
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
 class ProfileViewModel : ViewModel() {
+    private val firebaseManager = FirebaseManager.getInstance()
+    
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state
-    private val auth = FirebaseAuth.getInstance()
 
-    fun updateName(name: String) {
-        _state.value = _state.value.copy(name = name)
+    init {
+        loadUserData()
     }
 
-    fun updateEmail(email: String) {
-        _state.value = _state.value.copy(email = email)
-    }
-
-    fun updatePhoneNumber(phoneNumber: String) {
-        _state.value = _state.value.copy(phoneNumber = phoneNumber)
+    private fun loadUserData() {
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(isLoading = true)
+                
+                val userData = firebaseManager.getCurrentUserData()
+                if (userData != null) {
+                    _state.value = _state.value.copy(
+                        name = (userData[UserFields.NAME] as? String) ?: "",
+                        email = (userData[UserFields.EMAIL] as? String) ?: "",
+                        phoneNumber = (userData[UserFields.PHONE_NUMBER] as? String) ?: "",
+                        isLoading = false,
+                        error = null
+                    )
+                } else {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Failed to load user data"
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Unknown error occurred"
+                )
+            }
+        }
     }
 
     fun signOut() {
-        auth.signOut()
+        firebaseManager.signOut()
         _state.value = _state.value.copy(showSignOutMessage = true)
     }
 
@@ -57,5 +83,5 @@ private fun generateRandomColor(): Color {
         Color(0xFFC0CA33), // Lime
         Color(0xFFFFB300)  // Amber
     )
-    return colors[Random.nextInt(colors.size)]
+    return colors.random()
 }
