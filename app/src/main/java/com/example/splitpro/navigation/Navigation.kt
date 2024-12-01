@@ -10,7 +10,7 @@ import com.example.splitpro.auth.LoginScreen
 import com.example.splitpro.screens.createProfile.CreateProfileScreen
 import com.example.splitpro.splash.SplashScreen
 import com.example.splitpro.screens.MainScreen
-import com.example.splitpro.screens.createGroup.CreateGroupScreen
+import com.example.splitpro.screens.groups.CreateGroupScreen
 import com.example.splitpro.screens.groups.GroupDetailsScreen
 
 object Routes {
@@ -22,6 +22,21 @@ object Routes {
     const val GROUP_DETAILS = "group_details/{groupId}"
 
     fun groupDetails(groupId: String) = "group_details/$groupId"
+}
+
+object Screen {
+    object CreateGroup {
+        const val route = "create_group"
+    }
+
+    object GroupDetails {
+        const val route = "group_details"
+        fun createRoute(groupId: String) = "$route/$groupId"
+    }
+
+    object Groups {
+        const val route = "groups"
+    }
 }
 
 @Composable
@@ -87,10 +102,15 @@ fun Navigation(navController: NavHostController) {
             )
         }
 
-        composable(Routes.CREATE_GROUP) {
-            CreateGroupScreen(
+        composable(route = Screen.CreateGroup.route) {
+             CreateGroupScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToGroupDetails = { groupId ->
+                    navController.navigate(Screen.GroupDetails.createRoute(groupId)) {
+                        popUpTo(Screen.Groups.route)
+                    }
                 }
             )
         }

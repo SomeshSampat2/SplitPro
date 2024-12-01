@@ -8,6 +8,8 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.example.splitpro.firebase.FirebaseConstants.COLLECTION_USERS
 import com.example.splitpro.firebase.FirebaseConstants.UserFields
+import com.example.splitpro.firebase.FirebaseConstants.COLLECTION_GROUPS
+import com.example.splitpro.firebase.FirebaseConstants.GroupFields
 import java.util.Date
 
 class FirebaseManager private constructor() {
@@ -93,5 +95,24 @@ class FirebaseManager private constructor() {
         return currentUser?.let { user ->
             getUserData(user.uid)
         }
+    }
+
+    suspend fun createGroup(groupName: String, groupType: String): String {
+        val currentUserId = currentUser?.uid ?: throw Exception("User not authenticated")
+        
+        val groupData = hashMapOf(
+            GroupFields.NAME to groupName,
+            GroupFields.TYPE to groupType,
+            GroupFields.CREATED_BY to currentUserId,
+            GroupFields.CREATED_AT to Date(),
+            GroupFields.UPDATED_AT to Date(),
+            GroupFields.MEMBERS to listOf(currentUserId)
+        )
+
+        val groupRef = firestore.collection(COLLECTION_GROUPS)
+            .add(groupData)
+            .await()
+
+        return groupRef.id
     }
 }

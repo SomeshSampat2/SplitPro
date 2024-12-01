@@ -1,5 +1,6 @@
-package com.example.splitpro.screens.createGroup
+package com.example.splitpro.screens.groups
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,6 +18,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.splitpro.R
 import com.example.splitpro.ui.theme.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 enum class GroupType {
     TRIP, HOME, COUPLE, ROOMMATES, FAMILY, FRIENDS, EVENT, OFFICE, PROJECT, OTHERS
@@ -25,11 +29,31 @@ enum class GroupType {
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CreateGroupScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit,
+    onNavigateToGroupDetails: (String) -> Unit,
+    viewModel: GroupsViewModel = viewModel()
 ) {
     var groupName by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(GroupType.TRIP) }
-    var isNameError by remember { mutableStateOf(false) }
+    val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(state.successMessage, state.createdGroupId) {
+        if (state.successMessage != null && state.createdGroupId != null) {
+            Toast.makeText(context, state.successMessage, Toast.LENGTH_SHORT).show()
+            state.createdGroupId?.let{ id ->
+                onNavigateToGroupDetails(id)
+            }
+            viewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(state.error) {
+        state.error?.let { error ->
+            Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+            viewModel.clearMessages()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -101,14 +125,9 @@ fun CreateGroupScreen(
                 value = groupName,
                 onValueChange = { 
                     groupName = it
-                    isNameError = false
                 },
                 label = { Text("Group Name") },
                 singleLine = true,
-                isError = isNameError,
-                supportingText = if (isNameError) {
-                    { Text("Please enter a group name") }
-                } else null,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -202,29 +221,31 @@ fun CreateGroupScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Create Button
             Button(
                 onClick = {
-                    if (groupName.isBlank()) {
-                        isNameError = true
+                    if (groupName.isNotBlank() && selectedType.name.isNotBlank()) {
+                        viewModel.createGroup(groupName, selectedType.name)
                     } else {
-                        // TODO: Handle group creation
-                        onNavigateBack()
+                        Toast.makeText(
+                            context,
+                            "Please fill in all fields",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Primary
-                )
+                    .padding(vertical = 16.dp),
+                enabled = !state.isLoading
             ) {
-                Text(
-                    "Create Group",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Create Group")
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
