@@ -26,7 +26,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
-import com.example.splitpro.viewmodels.GroupDetailsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
