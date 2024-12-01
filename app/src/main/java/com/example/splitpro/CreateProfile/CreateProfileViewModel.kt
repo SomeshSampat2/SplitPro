@@ -2,16 +2,13 @@ package com.example.splitpro.CreateProfile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.splitpro.firebase.FirebaseManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
-class ProfileViewModel : ViewModel() {
-    private val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
+class CreateProfileViewModel : ViewModel() {
+    private val firebaseManager = FirebaseManager.getInstance()
     
     private val _state = MutableStateFlow<ProfileState>(ProfileState.Initial)
     val state: StateFlow<ProfileState> = _state
@@ -20,9 +17,8 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _state.value = ProfileState.Loading
-                auth.currentUser?.let { user ->
-                    val userRef = firestore.collection("Users").document(user.uid)
-                    userRef.update("name", name).await()
+                firebaseManager.currentUser?.let { user ->
+                    firebaseManager.updateUserName(user.uid, name)
                     _state.value = ProfileState.NameSaved
                 }
             } catch (e: Exception) {
@@ -35,10 +31,11 @@ class ProfileViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _state.value = ProfileState.Loading
-                auth.currentUser?.let { user ->
-                    val userRef = firestore.collection("Users").document(user.uid)
-                    userRef.update("phoneNumber", phoneNumber).await()
-                    _state.value = ProfileState.PhoneNumberSaved
+                firebaseManager.currentUser?.let { user ->
+                    if (phoneNumber != null) {
+                        firebaseManager.updateUserPhoneNumber(user.uid, phoneNumber)
+                        _state.value = ProfileState.PhoneNumberSaved
+                    }
                 }
             } catch (e: Exception) {
                 _state.value = ProfileState.Error("Failed to save phone number: ${e.message}")

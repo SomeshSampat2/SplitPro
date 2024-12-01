@@ -22,11 +22,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.ui.theme.Primary
 import com.example.splitpro.ui.theme.PrimaryLight
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CreateProfileScreen(
     onNavigateToMain: () -> Unit,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: CreateProfileViewModel = viewModel()
 ) {
     var name by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
