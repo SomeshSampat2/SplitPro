@@ -32,9 +32,6 @@ import com.example.splitpro.R
 import com.example.splitpro.ui.theme.ExpenseRed
 import com.example.splitpro.ui.theme.PrimaryLight
 import com.example.splitpro.ui.theme.SettledGreen
-import com.example.splitpro.viewmodels.ExpenseDataPoint
-import com.example.splitpro.viewmodels.ExpenseSummary
-import com.example.splitpro.viewmodels.HomeViewModel
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 

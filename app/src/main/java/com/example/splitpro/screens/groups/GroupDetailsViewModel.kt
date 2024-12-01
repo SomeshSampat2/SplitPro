@@ -1,4 +1,4 @@
-package com.example.splitpro.viewmodels
+package com.example.splitpro.screens.groups
 
 import androidx.lifecycle.ViewModel
 import com.example.splitpro.data.models.GroupDetails
@@ -7,7 +7,6 @@ import com.example.splitpro.data.models.GroupMember
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.Date
 import java.util.Calendar
 
 class GroupDetailsViewModel : ViewModel() {
