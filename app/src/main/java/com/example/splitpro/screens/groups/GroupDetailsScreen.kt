@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -104,6 +105,14 @@ fun GroupDetailsScreen(
                     }
                 }
 
+                // Members Section
+                item {
+                    GroupMembersRow(
+                        members = groupDetails.members,
+                        onAddMember = onAddMember
+                    )
+                }
+
                 // Entries Section
                 item {
                     if (groupDetails.entries.isEmpty()) {
@@ -112,17 +121,105 @@ fun GroupDetailsScreen(
                         EntriesSection(entries = groupDetails.entries)
                     }
                 }
-
-                // Members Section
-                item {
-                    if (groupDetails.members.isEmpty()) {
-                        EmptyMembersSection(onAddMember = onAddMember)
-                    } else {
-                        MembersSection(members = groupDetails.members, onAddMember = onAddMember)
-                    }
-                }
             }
         }
+    }
+}
+
+@Composable
+fun GroupMembersRow(
+    members: List<GroupMember>,
+    onAddMember: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Members",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(vertical = 8.dp)
+        ) {
+            items(members) { member ->
+                MemberAvatar(member = member)
+            }
+            
+            item {
+                AddMemberButton(onClick = onAddMember)
+            }
+        }
+    }
+}
+
+@Composable
+fun MemberAvatar(member: GroupMember) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(72.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(getColorForName(member.name))
+                .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = member.name.take(1).uppercase(),
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Text(
+            text = member.name,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+fun AddMemberButton(onClick: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(72.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape)
+                .clickable(onClick = onClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_person_add),
+                contentDescription = "Add Member",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        Text(
+            text = "Add",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 

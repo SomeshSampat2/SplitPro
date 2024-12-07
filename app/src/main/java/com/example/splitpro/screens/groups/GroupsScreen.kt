@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
 import com.example.splitpro.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +32,7 @@ fun GroupsScreen(
     viewModel: GroupsViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    println("DEBUG: GroupsScreen - Current state: $state")
 
     Box(
         modifier = Modifier
@@ -44,78 +47,85 @@ fun GroupsScreen(
                 )
             )
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
-        ) {
-            // Enhanced Header
-            item {
-                Column(
+        Column(modifier = Modifier.fillMaxSize()) {
+            if (state.isLoading) {
+                println("DEBUG: GroupsScreen - Showing loading state")
+                CircularProgressIndicator(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                ) {
-                    Text(
-                        text = "Your Groups",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        text = "Track and manage your shared expenses",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Search Bar
-                    OutlinedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                            Text(
-                                text = "Search groups...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
-                    }
-                }
+                        .size(50.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
             }
-
-            when {
-                state.isLoading -> {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
+            
+            if (state.error != null) {
+                println("DEBUG: GroupsScreen - Showing error: ${state.error}")
+                Text(
+                    text = "Error: ${state.error}",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
+            ) {
+                // Enhanced Header
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                    ) {
+                        Text(
+                            text = "Your Groups",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text(
+                            text = "Track and manage your shared expenses",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // Search Bar
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.outlinedCardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         ) {
-                            CircularProgressIndicator()
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                                Text(
+                                    text = "Search groups...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
                         }
                     }
                 }
-                state.groups.isEmpty() -> {
+
+                if (state.groups.isEmpty() && !state.isLoading) {
+                    println("DEBUG: GroupsScreen - No groups to display")
                     item {
                         Box(
                             modifier = Modifier
@@ -150,8 +160,8 @@ fun GroupsScreen(
                             }
                         }
                     }
-                }
-                else -> {
+                } else {
+                    println("DEBUG: GroupsScreen - Displaying ${state.groups.size} groups")
                     item {
                         Text(
                             text = "${state.groups.size} Active Groups",
@@ -166,10 +176,13 @@ fun GroupsScreen(
                         items = state.groups,
                         key = { it.id }
                     ) { group ->
+                        println("DEBUG: GroupsScreen - Rendering group: ${group.id}")
                         GroupCard(
                             group = group,
-                            formattedDate = viewModel.formatDate(group.createdAt),
-                            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                            formattedDate = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(group.createdAt),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
                             onClick = { onGroupClick(group.id) }
                         )
                     }

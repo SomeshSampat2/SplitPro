@@ -27,21 +27,55 @@ class GroupDetailsViewModel : ViewModel() {
             try {
                 val groupData = firebaseManager.getGroupDetails(groupId)
                 if (groupData != null) {
-                    val members = (groupData[GroupFields.MEMBERS] as? List<*>)?.size ?: 0
-                    val groupName = groupData[GroupFields.NAME] as? String ?: "Unknown Group"
-                    val groupType = groupData[GroupFields.TYPE] as? String ?: "Unknown Type"
+                    @Suppress("UNCHECKED_CAST")
+                    val membersData = groupData["members"] as? List<Map<String, Any>> ?: emptyList()
+                    val members = membersData.map { memberData ->
+                        GroupMember(
+                            userId = memberData["userId"] as? String ?: "",
+                            name = memberData["name"] as? String ?: "Unknown",
+                            balance = (memberData["balance"] as? Number)?.toDouble() ?: 0.0,
+                            isRegistered = memberData["isRegistered"] as? Boolean ?: false,
+                            unregisteredName = memberData["unregisteredName"] as? String,
+                            addedBy = memberData["addedBy"] as? String
+                        )
+                    }
                     
                     _groupDetails.value = GroupDetails(
                         id = groupId,
-                        name = groupName,
-                        groupType = groupType,
-                        members = emptyList(), // Empty list for now
-                        entries = emptyList()  // Empty list for now
+                        name = groupData["name"] as? String ?: "Unknown Group",
+                        groupType = groupData["type"] as? String ?: "Unknown Type",
+                        members = members,
+                        entries = emptyList()  // We'll handle entries later
                     )
                 }
             } catch (e: Exception) {
-                // Handle error
+                println("Error loading group details: ${e.message}")
+                e.printStackTrace()
             }
+        }
+    }
+
+    suspend fun addMembersToGroup(groupId: String, selectedContacts: List<Contact>) {
+        try {
+            val currentUserId = firebaseManager.currentUser?.uid ?: throw Exception("User not logged in")
+            val members = selectedContacts.map { contact ->
+                val userId = firebaseManager.findUserByPhoneNumber(contact.phoneNumber) ?: contact.phoneNumber
+                GroupMember(
+                    userId = userId,
+                    name = contact.name,
+                    balance = 0.0,
+                    isRegistered = userId != contact.phoneNumber,
+                    unregisteredName = if (userId == contact.phoneNumber) contact.name else null,
+                    addedBy = currentUserId
+                )
+            }
+            
+            firebaseManager.addMembersToGroup(groupId, members)
+            // Refresh group details
+            loadGroupDetails(groupId)
+        } catch (e: Exception) {
+            _groupDetails.value = null
+            throw e
         }
     }
 }
