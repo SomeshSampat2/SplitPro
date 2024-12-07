@@ -1,6 +1,9 @@
 package com.example.splitpro.firebase
 
 import com.example.splitpro.data.models.GroupMember
+import com.example.splitpro.data.models.Expense
+import com.example.splitpro.data.models.ExpenseContributor
+import com.example.splitpro.data.models.GroupDetails
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -20,6 +23,7 @@ class FirebaseManager private constructor() {
     companion object {
         private const val COLLECTION_USERS = "users"
         private const val COLLECTION_GROUPS = "groups"
+        private const val COLLECTION_EXPENSES = "expenses"
         
         private object UserFields {
             const val NAME = "name"
@@ -43,6 +47,18 @@ class FirebaseManager private constructor() {
             const val MEMBER_IS_REGISTERED = "isRegistered"
             const val MEMBER_UNREGISTERED_NAME = "unregisteredName"
             const val MEMBER_ADDED_BY = "addedBy"
+            const val ENTRIES = "entries"
+        }
+
+        private object ExpenseFields {
+            const val DESCRIPTION = "description"
+            const val AMOUNT = "amount"
+            const val CREATED_BY = "createdBy"
+            const val CREATED_AT = "createdAt"
+            const val GROUP_ID = "groupId"
+            const val CONTRIBUTORS = "contributors"
+            const val CONTRIBUTOR_USER_ID = "userId"
+            const val CONTRIBUTOR_AMOUNT = "amount"
         }
         
         @Volatile
@@ -204,15 +220,85 @@ class FirebaseManager private constructor() {
         return groupRef.id
     }
 
-    suspend fun getGroupDetails(groupId: String): Map<String, Any>? {
+    suspend fun getGroupDetails(groupId: String): GroupDetails? {
         return try {
-            firestore.collection(COLLECTION_GROUPS)
+            val groupDoc = firestore.collection(COLLECTION_GROUPS)
                 .document(groupId)
                 .get()
                 .await()
-                .data
+
+            if (groupDoc.exists()) {
+                @Suppress("UNCHECKED_CAST")
+                val membersData = groupDoc.get(GroupFields.MEMBERS) as? List<Map<String, Any>> ?: emptyList()
+                val members = membersData.map { memberMap ->
+                    GroupMember(
+                        userId = memberMap[GroupFields.MEMBER_USER_ID] as String,
+                        name = memberMap[GroupFields.MEMBER_NAME] as String,
+                        balance = (memberMap[GroupFields.MEMBER_BALANCE] as Number).toDouble(),
+                        isRegistered = memberMap[GroupFields.MEMBER_IS_REGISTERED] as Boolean,
+                        unregisteredName = memberMap[GroupFields.MEMBER_UNREGISTERED_NAME] as? String,
+                        addedBy = memberMap[GroupFields.MEMBER_ADDED_BY] as? String
+                    )
+                }
+
+                @Suppress("UNCHECKED_CAST")
+                val entryIds = groupDoc.get(GroupFields.ENTRIES) as? List<String> ?: emptyList()
+
+                GroupDetails(
+                    id = groupDoc.id,
+                    name = groupDoc.getString(GroupFields.NAME) ?: "",
+                    groupType = groupDoc.getString(GroupFields.TYPE) ?: "",
+                    members = members,
+                    entries = entryIds
+                )
+            } else {
+                null
+            }
         } catch (e: Exception) {
+            e.printStackTrace()
             null
+        }
+    }
+
+    suspend fun getGroupExpenses(expenseIds: List<String>): List<Expense> {
+        return try {
+            val expenses = mutableListOf<Expense>()
+            
+            for (expenseId in expenseIds) {
+                val expenseDoc = firestore.collection(COLLECTION_EXPENSES)
+                    .document(expenseId)
+                    .get()
+                    .await()
+                
+                if (expenseDoc.exists()) {
+                    @Suppress("UNCHECKED_CAST")
+                    val contributorsData = expenseDoc.get(ExpenseFields.CONTRIBUTORS) as? List<Map<String, Any>> ?: emptyList()
+                    
+                    val contributors = contributorsData.map { contributorMap ->
+                        ExpenseContributor(
+                            userId = contributorMap[ExpenseFields.CONTRIBUTOR_USER_ID] as String,
+                            amount = (contributorMap[ExpenseFields.CONTRIBUTOR_AMOUNT] as Number).toDouble()
+                        )
+                    }
+                    
+                    expenses.add(
+                        Expense(
+                            id = expenseDoc.id,
+                            description = expenseDoc.getString(ExpenseFields.DESCRIPTION) ?: "",
+                            amount = expenseDoc.getDouble(ExpenseFields.AMOUNT) ?: 0.0,
+                            createdBy = expenseDoc.getString(ExpenseFields.CREATED_BY) ?: "",
+                            createdAt = expenseDoc.getTimestamp(ExpenseFields.CREATED_AT)?.toDate() ?: Date(),
+                            groupId = expenseDoc.getString(ExpenseFields.GROUP_ID) ?: "",
+                            contributors = contributors
+                        )
+                    )
+                }
+            }
+            
+            expenses.sortedByDescending { it.createdAt }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
         }
     }
 
@@ -256,6 +342,66 @@ class FirebaseManager private constructor() {
             ).await()
         } else {
             throw Exception("Group not found")
+        }
+    }
+
+    suspend fun addExpense(
+        groupId: String,
+        description: String,
+        totalAmount: Double,
+        contributors: Map<String, Double>
+    ): Result<String> {
+        return try {
+            val currentUserId = currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
+            
+            val result = firestore.runTransaction { transaction ->
+                // First, perform all reads
+                val groupRef = firestore.collection(COLLECTION_GROUPS).document(groupId)
+                val groupSnapshot = transaction.get(groupRef)
+                
+                if (!groupSnapshot.exists()) {
+                    throw Exception("Group not found")
+                }
+                
+                // Get current entries or initialize empty list
+                @Suppress("UNCHECKED_CAST")
+                val currentEntries = groupSnapshot.get(GroupFields.ENTRIES) as? List<String> ?: listOf()
+                
+                // Create expense reference (this is not a read or write, just creating a reference)
+                val expenseRef = firestore.collection(COLLECTION_EXPENSES).document()
+                
+                // Now prepare the data for writes
+                val expenseData = hashMapOf(
+                    ExpenseFields.DESCRIPTION to description,
+                    ExpenseFields.AMOUNT to totalAmount,
+                    ExpenseFields.CREATED_BY to currentUserId,
+                    ExpenseFields.CREATED_AT to Date(),
+                    ExpenseFields.GROUP_ID to groupId,
+                    ExpenseFields.CONTRIBUTORS to contributors.map { (userId, amount) ->
+                        hashMapOf(
+                            ExpenseFields.CONTRIBUTOR_USER_ID to userId,
+                            ExpenseFields.CONTRIBUTOR_AMOUNT to amount
+                        )
+                    }
+                )
+                
+                // Prepare group updates
+                val groupUpdates = hashMapOf<String, Any>(
+                    GroupFields.ENTRIES to currentEntries + expenseRef.id,
+                    GroupFields.UPDATED_AT to Date()
+                )
+                
+                // After all reads are done, perform writes
+                transaction.set(expenseRef, expenseData)
+                transaction.update(groupRef, groupUpdates)
+                
+                expenseRef.id
+            }.await()
+            
+            Result.success(result)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure(e)
         }
     }
 }

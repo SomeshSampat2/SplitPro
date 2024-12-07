@@ -15,6 +15,7 @@ import com.example.splitpro.screens.groups.CreateGroupScreen
 import com.example.splitpro.screens.groups.GroupDetailsScreen
 import com.example.splitpro.screens.groups.AddGroupMemberScreen
 import com.example.splitpro.screens.groups.GroupDetailsViewModel
+import com.example.splitpro.screens.groups.AddExpenseScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -24,9 +25,11 @@ object Routes {
     const val CREATE_GROUP = "create_group"
     const val GROUP_DETAILS = "group_details/{groupId}"
     const val ADD_GROUP_MEMBER = "add_group_member/{groupId}"
+    const val ADD_EXPENSE = "add_expense/{groupId}"
 
     fun groupDetails(groupId: String) = "group_details/$groupId"
     fun addGroupMember(groupId: String) = "add_group_member/$groupId"
+    fun addExpense(groupId: String) = "add_expense/$groupId"
 }
 
 object Screen {
@@ -41,6 +44,11 @@ object Screen {
 
     object AddGroupMember {
         const val route = "add_group_member"
+        fun createRoute(groupId: String) = "$route/$groupId"
+    }
+
+    object AddExpense {
+        const val route = "add_expense"
         fun createRoute(groupId: String) = "$route/$groupId"
     }
 
@@ -139,6 +147,9 @@ fun Navigation(navController: NavHostController) {
                 },
                 onAddMember = {
                     navController.navigate(Routes.addGroupMember(groupId))
+                },
+                onAddExpense = {
+                    navController.navigate(Routes.addExpense(groupId))
                 }
             )
         }
@@ -159,6 +170,19 @@ fun Navigation(navController: NavHostController) {
                 onNavigateBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(
+            route = Routes.ADD_EXPENSE,
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+            AddExpenseScreen(
+                groupId = groupId,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

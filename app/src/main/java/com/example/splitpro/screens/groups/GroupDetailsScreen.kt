@@ -23,8 +23,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.splitpro.R
-import com.example.splitpro.data.models.GroupEntry
+import com.example.splitpro.data.models.Expense
 import com.example.splitpro.data.models.GroupMember
+import com.example.splitpro.firebase.FirebaseManager
+import com.example.splitpro.utils.getColorForName
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -34,12 +36,16 @@ fun GroupDetailsScreen(
     groupId: String,
     viewModel: GroupDetailsViewModel = viewModel(),
     onNavigateBack: () -> Unit,
-    onAddMember: () -> Unit
+    onAddMember: () -> Unit,
+    onAddExpense: () -> Unit
 ) {
     val details by viewModel.groupDetails.collectAsState()
+    val expenses by viewModel.expenses.collectAsState()
+    val currentUserId = FirebaseManager.getInstance().currentUser?.uid ?: ""
 
     LaunchedEffect(groupId) {
         viewModel.loadGroupDetails(groupId)
+//        viewModel.loadExpenses(groupId)
     }
 
     details?.let { groupDetails ->
@@ -54,35 +60,44 @@ fun GroupDetailsScreen(
                                 contentDescription = "Back"
                             )
                         }
+                    },
+                    actions = {
+                        IconButton(onClick = onAddMember) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_person_add),
+                                contentDescription = "Add Member"
+                            )
+                        }
                     }
                 )
             },
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = { /* TODO: Navigate to Add Expense */ },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    icon = {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_payment),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = "Add expense",
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    },
-                    modifier = Modifier.padding(16.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier
+                            .padding(bottom = 32.dp),
+                        onClick = onAddExpense,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        icon = {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_payment),
+                                contentDescription = null
+                            )
+                        },
+                        text = { Text("Add Expense") }
+                    )
+                }
             }
         ) { paddingValues ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(paddingValues),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Group Header
                 item {
@@ -107,18 +122,49 @@ fun GroupDetailsScreen(
 
                 // Members Section
                 item {
-                    GroupMembersRow(
-                        members = groupDetails.members,
-                        onAddMember = onAddMember
-                    )
+                    if (groupDetails.members.isEmpty()) {
+                        EmptyMembersSection(onAddMember)
+                    } else {
+                        MembersSection(
+                            members = groupDetails.members,
+                            onAddMember = onAddMember
+                        )
+                    }
                 }
 
-                // Entries Section
+                // Expenses List
                 item {
-                    if (groupDetails.entries.isEmpty()) {
-                        EmptyEntriesSection()
-                    } else {
-                        EntriesSection(entries = groupDetails.entries)
+                    if (expenses.isNotEmpty()) {
+                        Text(
+                            text = "Recent Expenses",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+                
+                items(expenses) { expense ->
+                    ExpenseItem(
+                        expense = expense,
+                        currentUserId = currentUserId,
+                        members = groupDetails.members
+                    )
+                }
+                
+                if (expenses.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No expenses yet",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
                     }
                 }
             }
@@ -291,7 +337,7 @@ private fun EmptyMembersSection(onAddMember: () -> Unit) {
 }
 
 @Composable
-private fun EntriesSection(entries: List<GroupEntry>) {
+private fun EntriesSection(entries: List<Expense>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = "Recent Expenses",
@@ -300,7 +346,7 @@ private fun EntriesSection(entries: List<GroupEntry>) {
         )
         
         val groupedEntries = entries.groupBy {
-            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(it.date)
+            SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(it.createdAt)
         }
 
         groupedEntries.forEach { (date, dateEntries) ->
@@ -329,7 +375,7 @@ private fun EntriesSection(entries: List<GroupEntry>) {
 }
 
 @Composable
-private fun EntryItem(entry: GroupEntry) {
+private fun EntryItem(entry: Expense) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -344,11 +390,11 @@ private fun EntryItem(entry: GroupEntry) {
             modifier = Modifier
                 .size(44.dp)
                 .clip(CircleShape)
-                .background(getColorForName(entry.paidBy)),
+                .background(getColorForName(entry.createdBy)),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = entry.paidBy.first().toString(),
+                text = entry.createdBy.first().toString(),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.surface,
                 fontWeight = FontWeight.Bold
@@ -382,7 +428,7 @@ private fun EntryItem(entry: GroupEntry) {
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = " • ${entry.time}",
+                    text = " • ${entry.createdAt}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -390,14 +436,15 @@ private fun EntryItem(entry: GroupEntry) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = when {
-                    entry.yourShare > 0 -> "You get back ₹${String.format("%.2f", entry.yourShare)}"
-                    entry.yourShare < 0 -> "You owe ₹${String.format("%.2f", -entry.yourShare)}"
+//                    entry.yourShare > 0 -> "You get back ₹${String.format("%.2f", entry.yourShare)}"
+//                    entry.yourShare < 0 -> "You owe ₹${String.format("%.2f", -entry.yourShare)}"
+                    //todo
                     else -> "No share"
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = when {
-                    entry.yourShare > 0 -> MaterialTheme.colorScheme.primary
-                    entry.yourShare < 0 -> MaterialTheme.colorScheme.error
+//                    entry.yourShare > 0 -> MaterialTheme.colorScheme.primary
+//                    entry.yourShare < 0 -> MaterialTheme.colorScheme.error
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 fontWeight = FontWeight.Medium
@@ -535,18 +582,72 @@ private fun MemberItem(
     }
 }
 
-private fun getColorForName(name: String): Color {
-    val hash = name.hashCode()
-    val colors = listOf(
-        Color(0xFF7E57C2), // Purple
-        Color(0xFFE91E63), // Pink
-        Color(0xFF00BCD4), // Cyan
-        Color(0xFFFF5722), // Deep Orange
-        Color(0xFF4CAF50), // Green
-        Color(0xFFFFC107), // Amber
-        Color(0xFF795548), // Brown
-        Color(0xFF03A9F4), // Light Blue
-        Color(0xFF8BC34A)  // Light Green
-    )
-    return colors[Math.abs(hash) % colors.size]
+@Composable
+private fun ExpenseItem(
+    expense: Expense,
+    currentUserId: String,
+    members: List<GroupMember>
+) {
+    val createdByMember = members.find { it.userId == expense.createdBy }
+    val yourContribution = expense.contributors.find { it.userId == currentUserId }?.amount ?: 0.0
+    
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = expense.description,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Paid by ${createdByMember?.name ?: "Unknown"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
+                
+                Text(
+                    text = "₹${expense.amount}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = if (expense.createdBy == currentUserId) {
+                    "You'll receive ₹${expense.amount - yourContribution}"
+                } else {
+                    "Your share: ₹$yourContribution"
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (expense.createdBy == currentUserId) 
+                    MaterialTheme.colorScheme.primary 
+                else 
+                    MaterialTheme.colorScheme.error
+            )
+            
+            Text(
+                text = expense.createdAt.toString(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
 }

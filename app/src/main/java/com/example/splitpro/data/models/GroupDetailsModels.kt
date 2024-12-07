@@ -11,14 +11,19 @@ data class GroupMember(
     val addedBy: String? = null // ID of the user who added this member
 )
 
-data class GroupEntry(
+data class ExpenseContributor(
+    val userId: String,
+    val amount: Double
+)
+
+data class Expense(
     val id: String,
-    val date: Date,
-    val paidBy: String,
-    val amount: Double,
     val description: String,
-    val time: String,
-    val yourShare: Double // positive means you'll receive, negative means you'll pay
+    val amount: Double,
+    val createdBy: String,
+    val createdAt: Date,
+    val groupId: String,
+    val contributors: List<ExpenseContributor>
 )
 
 data class GroupDetails(
@@ -26,5 +31,5 @@ data class GroupDetails(
     val name: String,
     val groupType: String,
     val members: List<GroupMember>,
-    val entries: List<GroupEntry>
+    val entries: List<String> // Now stores expense IDs instead of GroupEntry objects
 )
