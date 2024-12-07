@@ -37,21 +37,32 @@ class GroupsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _state.value = _state.value.copy(isLoading = true)
+                println("DEBUG: ViewModel - Starting to load groups")
                 val groupsData = firebaseManager.getUserGroups()
+                println("DEBUG: ViewModel - Received ${groupsData.size} groups from Firebase")
+                
                 val groups = groupsData.map { data ->
+                    println("DEBUG: ViewModel - Processing group data: $data")
                     Group(
                         id = data["id"] as String,
                         name = data["name"] as? String ?: "Unnamed Group",
                         createdAt = (data["createdAt"] as? com.google.firebase.Timestamp)?.toDate() ?: Date(),
-                        memberCount = (data["members"] as? List<*>)?.size ?: 0
-                    )
+                        memberCount = (data["members"] as? List<*>)?.size ?: 1
+                    ).also {
+                        println("DEBUG: ViewModel - Created Group object: $it")
+                    }
                 }
+                
+                println("DEBUG: ViewModel - Updating state with ${groups.size} groups")
                 _state.value = _state.value.copy(
                     groups = groups,
                     isLoading = false,
                     error = null
                 )
+                println("DEBUG: ViewModel - State updated: ${_state.value}")
             } catch (e: Exception) {
+                println("DEBUG: ViewModel - Error loading groups: ${e.message}")
+                e.printStackTrace()
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = e.message

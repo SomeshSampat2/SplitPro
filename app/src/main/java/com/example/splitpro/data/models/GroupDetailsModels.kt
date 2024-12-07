@@ -3,9 +3,12 @@ package com.example.splitpro.data.models
 import java.util.Date
 
 data class GroupMember(
-    val id: String,
+    val userId: String,
     val name: String,
-    val balance: Double // positive means you'll receive, negative means you'll pay
+    val balance: Double,
+    val isRegistered: Boolean,
+    val unregisteredName: String? = null,
+    val addedBy: String? = null // ID of the user who added this member
 )
 
 data class GroupEntry(

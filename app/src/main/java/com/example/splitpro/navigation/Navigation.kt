@@ -1,6 +1,7 @@
 package com.example.splitpro.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -13,6 +14,7 @@ import com.example.splitpro.screens.MainScreen
 import com.example.splitpro.screens.groups.CreateGroupScreen
 import com.example.splitpro.screens.groups.GroupDetailsScreen
 import com.example.splitpro.screens.groups.AddGroupMemberScreen
+import com.example.splitpro.screens.groups.GroupDetailsViewModel
 
 object Routes {
     const val SPLASH = "splash"
@@ -148,8 +150,12 @@ fun Navigation(navController: NavHostController) {
             )
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
+            val viewModel: GroupDetailsViewModel = viewModel(
+                viewModelStoreOwner = navController.getBackStackEntry(Routes.GROUP_DETAILS.replace("{groupId}", groupId))
+            )
             AddGroupMemberScreen(
                 groupId = groupId,
+                viewModel = viewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

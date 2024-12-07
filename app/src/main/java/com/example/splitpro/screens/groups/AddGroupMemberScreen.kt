@@ -42,6 +42,7 @@ data class Contact(
 @Composable
 fun AddGroupMemberScreen(
     groupId: String,
+    viewModel: GroupDetailsViewModel,
     onNavigateBack: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -49,6 +50,7 @@ fun AddGroupMemberScreen(
     val selectedContacts = remember { mutableStateListOf<Contact>() }
     var isLoading by remember { mutableStateOf(true) }
     var hasPermission by remember { mutableStateOf(false) }
+    var isAddingMembers by remember { mutableStateOf(false) }
     
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -107,20 +109,38 @@ fun AddGroupMemberScreen(
         },
         floatingActionButton = {
             if (selectedContacts.isNotEmpty()) {
-                ExtendedFloatingActionButton(
+                FloatingActionButton(
                     onClick = {
-                        // TODO: Implement adding members to group
-                        Toast.makeText(context, "Adding ${selectedContacts.size} members...", Toast.LENGTH_SHORT).show()
+                        scope.launch {
+                            isAddingMembers = true
+                            try {
+                                viewModel.addMembersToGroup(groupId, selectedContacts)
+                                Toast.makeText(context, "Members added successfully", Toast.LENGTH_SHORT).show()
+                                onNavigateBack()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, e.message ?: "Failed to add members", Toast.LENGTH_LONG).show()
+                            } finally {
+                                isAddingMembers = false
+                            }
+                        }
                     },
+                    modifier = Modifier
+                        .padding(24.dp),
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Add Selected")
+                    if (isAddingMembers) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Add Members",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
         }
