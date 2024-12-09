@@ -16,6 +16,7 @@ import com.example.splitpro.screens.groups.GroupDetailsScreen
 import com.example.splitpro.screens.groups.AddGroupMemberScreen
 import com.example.splitpro.screens.groups.GroupDetailsViewModel
 import com.example.splitpro.screens.groups.AddExpenseScreen
+import com.example.splitpro.screens.groups.SettleUpScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -26,10 +27,12 @@ object Routes {
     const val GROUP_DETAILS = "group_details/{groupId}"
     const val ADD_GROUP_MEMBER = "add_group_member/{groupId}"
     const val ADD_EXPENSE = "add_expense/{groupId}"
+    const val SETTLE_UP = "settle_up/{expenseId}"
 
     fun groupDetails(groupId: String) = "group_details/$groupId"
     fun addGroupMember(groupId: String) = "add_group_member/$groupId"
     fun addExpense(groupId: String) = "add_expense/$groupId"
+    fun settleUp(expenseId: String) = "settle_up/$expenseId"
 }
 
 object Screen {
@@ -54,6 +57,11 @@ object Screen {
 
     object Groups {
         const val route = "groups"
+    }
+
+    object SettleUp {
+        const val route = "settle_up"
+        fun createRoute(expenseId: String) = "$route/$expenseId"
     }
 }
 
@@ -142,15 +150,10 @@ fun Navigation(navController: NavHostController) {
             val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
             GroupDetailsScreen(
                 groupId = groupId,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onAddMember = {
-                    navController.navigate(Routes.addGroupMember(groupId))
-                },
-                onAddExpense = {
-                    navController.navigate(Routes.addExpense(groupId))
-                }
+                onNavigateBack = { navController.popBackStack() },
+                onAddMember = { navController.navigate(Routes.addGroupMember(groupId)) },
+                onAddExpense = { navController.navigate(Routes.addExpense(groupId)) },
+                onSettleUpExpense = { expenseId -> navController.navigate(Routes.settleUp(expenseId)) }
             )
         }
 
@@ -182,6 +185,19 @@ fun Navigation(navController: NavHostController) {
             val groupId = backStackEntry.arguments?.getString("groupId") ?: return@composable
             AddExpenseScreen(
                 groupId = groupId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.SETTLE_UP,
+            arguments = listOf(
+                navArgument("expenseId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val expenseId = backStackEntry.arguments?.getString("expenseId") ?: ""
+            SettleUpScreen(
+                expenseId = expenseId,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
