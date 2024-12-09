@@ -37,7 +37,8 @@ fun GroupDetailsScreen(
     viewModel: GroupDetailsViewModel = viewModel(),
     onNavigateBack: () -> Unit,
     onAddMember: () -> Unit,
-    onAddExpense: () -> Unit
+    onAddExpense: () -> Unit,
+    onSettleUpExpense: (String) -> Unit
 ) {
     val details by viewModel.groupDetails.collectAsState()
     val expenses by viewModel.expenses.collectAsState()
@@ -147,7 +148,8 @@ fun GroupDetailsScreen(
                     ExpenseItem(
                         expense = expense,
                         currentUserId = currentUserId,
-                        members = groupDetails.members
+                        members = groupDetails.members,
+                        onClick = { onSettleUpExpense(expense.id) }
                     )
                 }
                 
@@ -586,14 +588,13 @@ private fun MemberItem(
 private fun ExpenseItem(
     expense: Expense,
     currentUserId: String,
-    members: List<GroupMember>
+    members: List<GroupMember>,
+    onClick: () -> Unit
 ) {
-    val createdByMember = members.find { it.userId == expense.createdBy }
-    val yourContribution = expense.contributors.find { it.userId == currentUserId }?.amount ?: 0.0
-    
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -615,7 +616,7 @@ private fun ExpenseItem(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Paid by ${createdByMember?.name ?: "Unknown"}",
+                        text = "Paid by ${members.find { it.userId == expense.createdBy }?.name ?: "Unknown"}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -632,14 +633,16 @@ private fun ExpenseItem(
             
             Text(
                 text = if (expense.createdBy == currentUserId) {
-                    "You'll receive ₹${expense.amount - yourContribution}"
+                    val contribution = expense.contributors.find { it.userId == currentUserId }?.amount ?: 0.0
+                    "You'll receive ₹${expense.amount - contribution}"
                 } else {
-                    "Your share: ₹$yourContribution"
+                    val contribution = expense.contributors.find { it.userId == currentUserId }?.amount ?: 0.0
+                    "Your share: ₹$contribution"
                 },
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (expense.createdBy == currentUserId) 
-                    MaterialTheme.colorScheme.primary 
-                else 
+                color = if (expense.createdBy == currentUserId)
+                    MaterialTheme.colorScheme.primary
+                else
                     MaterialTheme.colorScheme.error
             )
             
